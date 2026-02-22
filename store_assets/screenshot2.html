@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Screenshot 2 - Preview Changes</title>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#F6F6F7; }
+  .topbar { background:#1A1F2E;height:56px;display:flex;align-items:center;padding:0 24px;gap:16px; }
+  .topbar-logo { color:#00D37F;font-weight:700;font-size:16px; }
+  .topbar-app { color:#fff;font-size:14px;opacity:0.7; }
+  .page { max-width:1000px;margin:0 auto;padding:32px 24px; }
+  .page-title { font-size:26px;font-weight:700;color:#1A1F2E;margin-bottom:6px; }
+  .page-sub { font-size:15px;color:#6B7280;margin-bottom:28px; }
+  .card { background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .card-title { font-size:14px;font-weight:600;color:#374151;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px; }
+  .summary-bar { display:flex;gap:16px;margin-bottom:20px; }
+  .summary-pill { background:#F0FDF8;border:1px solid #BBF7D0;border-radius:8px;padding:10px 16px;font-size:13px;color:#00A363;font-weight:600; }
+  .summary-pill span { color:#6B7280;font-weight:400; }
+  table { width:100%;border-collapse:collapse; }
+  th { text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;padding:10px 12px;border-bottom:2px solid #E5E7EB; }
+  td { padding:12px;font-size:14px;color:#374151;border-bottom:1px solid #F3F4F6; }
+  tr:hover td { background:#FAFAFA; }
+  .product-name { font-weight:600;color:#1A1F2E; }
+  .variant { font-size:12px;color:#9CA3AF;margin-top:2px; }
+  .price-old { color:#9CA3AF;text-decoration:line-through;font-size:13px; }
+  .price-new { color:#00A363;font-weight:700;font-size:15px; }
+  .arrow { color:#D1D5DB;margin:0 6px; }
+  .saving { background:#FEF9C3;color:#92400E;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600; }
+  .btn-row { display:flex;gap:10px;margin-top:20px;justify-content:flex-end; }
+  .btn-primary { background:#00D37F;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600; }
+  .btn-secondary { background:#fff;color:#374151;border:1.5px solid #D1D5DB;padding:10px 20px;border-radius:8px;font-size:14px; }
+  .badge-count { background:#1A1F2E;color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-logo">BPE</span>
+  <span class="topbar-app">Bulk Price Editor</span>
+</div>
+<div class="page">
+  <div class="page-title">Preview Price Changes</div>
+  <div class="page-sub">Review every change before applying. Nothing is saved until you confirm.</div>
+  <div class="summary-bar">
+    <div class="summary-pill">387 variants <span>will be updated</span></div>
+    <div class="summary-pill">−20% <span>decrease</span></div>
+    <div class="summary-pill">Winter Collection <span>filter</span></div>
+    <div class="summary-pill">.99 <span>rounding applied</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="card-title">Price Changes Preview <span class="badge-count">387</span></div>
+      <input style="padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:13px;width:220px" placeholder="🔍  Search products..." />
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Current Price</th>
+          <th>New Price</th>
+          <th>Saving</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><div class="product-name">Alpine Fleece Jacket</div><div class="variant">Blue / XL</div></td><td><span class="price-old">$89.00</span></td><td><span class="price-new">$70.99</span></td><td><span class="saving">−$18.01</span></td></tr>
+        <tr><td><div class="product-name">Alpine Fleece Jacket</div><div class="variant">Blue / M</div></td><td><span class="price-old">$89.00</span></td><td><span class="price-new">$70.99</span></td><td><span class="saving">−$18.01</span></td></tr>
+        <tr><td><div class="product-name">Merino Wool Scarf</div><div class="variant">Charcoal</div></td><td><span class="price-old">$45.00</span></td><td><span class="price-new">$35.99</span></td><td><span class="saving">−$9.01</span></td></tr>
+        <tr><td><div class="product-name">Thermal Base Layer</div><div class="variant">Black / S</div></td><td><span class="price-old">$62.00</span></td><td><span class="price-new">$49.99</span></td><td><span class="saving">−$12.01</span></td></tr>
+        <tr><td><div class="product-name">Thermal Base Layer</div><div class="variant">Black / L</div></td><td><span class="price-old">$62.00</span></td><td><span class="price-new">$49.99</span></td><td><span class="saving">−$12.01</span></td></tr>
+        <tr><td><div class="product-name">Winter Puffer Vest</div><div class="variant">Navy / XS</div></td><td><span class="price-old">$110.00</span></td><td><span class="price-new">$87.99</span></td><td><span class="saving">−$22.01</span></td></tr>
+        <tr><td><div class="product-name">Cashmere Beanie</div><div class="variant">Cream</div></td><td><span class="price-old">$38.00</span></td><td><span class="price-new">$29.99</span></td><td><span class="saving">−$8.01</span></td></tr>
+      </tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn-secondary">← Back to Edit</button>
+      <button class="btn-primary">✓ Apply 387 Changes</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

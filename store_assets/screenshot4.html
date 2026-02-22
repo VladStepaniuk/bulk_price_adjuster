@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Screenshot 4 - History & Revert</title>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#F6F6F7; }
+  .topbar { background:#1A1F2E;height:56px;display:flex;align-items:center;padding:0 24px;gap:16px; }
+  .topbar-logo { color:#00D37F;font-weight:700;font-size:16px; }
+  .topbar-app { color:#fff;font-size:14px;opacity:0.7; }
+  .page { max-width:1000px;margin:0 auto;padding:32px 24px; }
+  .page-title { font-size:26px;font-weight:700;color:#1A1F2E;margin-bottom:6px; }
+  .page-sub { font-size:15px;color:#6B7280;margin-bottom:28px; }
+  .card { background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  table { width:100%;border-collapse:collapse; }
+  th { text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;padding:10px 12px;border-bottom:2px solid #E5E7EB; }
+  td { padding:14px 12px;font-size:14px;color:#374151;border-bottom:1px solid #F3F4F6;vertical-align:middle; }
+  .campaign-name { font-weight:600;color:#1A1F2E; }
+  .campaign-meta { font-size:12px;color:#9CA3AF;margin-top:3px; }
+  .status-pill { display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600; }
+  .status-done { background:#F0FDF8;color:#00A363;border:1px solid #BBF7D0; }
+  .status-reverted { background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB; }
+  .btn-revert { background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer; }
+  .btn-view { background:#F9FAFB;color:#374151;border:1.5px solid #E5E7EB;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer; }
+  .change-tag { background:#EFF6FF;color:#1D4ED8;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-logo">BPE</span>
+  <span class="topbar-app">Bulk Price Editor</span>
+</div>
+<div class="page">
+  <div class="page-title">Adjustment History</div>
+  <div class="page-sub">Every price change is logged. Revert any campaign with one click.</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Campaign</th>
+          <th>Change</th>
+          <th>Variants</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="campaign-name">Winter Collection Sale</div><div class="campaign-meta">Collection · .99 rounding</div></td>
+          <td><span class="change-tag">−20%</span></td>
+          <td>387</td>
+          <td>Today, 3:41 PM</td>
+          <td><span class="status-pill status-done">● Applied</span></td>
+          <td><button class="btn-revert">↩ Revert</button></td>
+        </tr>
+        <tr>
+          <td><div class="campaign-name">New Arrivals Markup</div><div class="campaign-meta">Collection · No rounding</div></td>
+          <td><span class="change-tag">+15%</span></td>
+          <td>52</td>
+          <td>Yesterday, 11:22 AM</td>
+          <td><span class="status-pill status-done">● Applied</span></td>
+          <td><button class="btn-revert">↩ Revert</button></td>
+        </tr>
+        <tr>
+          <td><div class="campaign-name">Flash Sale — All Products</div><div class="campaign-meta">Entire store · .95 rounding</div></td>
+          <td><span class="change-tag">−30%</span></td>
+          <td>1,204</td>
+          <td>Feb 18, 9:00 AM</td>
+          <td><span class="status-pill status-reverted">↩ Reverted</span></td>
+          <td><button class="btn-view">View</button></td>
+        </tr>
+        <tr>
+          <td><div class="campaign-name">Vendor Price Update — Nike</div><div class="campaign-meta">Vendor · No rounding</div></td>
+          <td><span class="change-tag">+$5.00</span></td>
+          <td>89</td>
+          <td>Feb 14, 2:15 PM</td>
+          <td><span class="status-pill status-done">● Applied</span></td>
+          <td><button class="btn-revert">↩ Revert</button></td>
+        </tr>
+        <tr>
+          <td><div class="campaign-name">Black Friday Sale</div><div class="campaign-meta">Tag: sale · .99 rounding</div></td>
+          <td><span class="change-tag">−25%</span></td>
+          <td>643</td>
+          <td>Nov 29, 12:00 AM</td>
+          <td><span class="status-pill status-reverted">↩ Reverted</span></td>
+          <td><button class="btn-view">View</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

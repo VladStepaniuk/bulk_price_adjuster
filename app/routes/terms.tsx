@@ -4,7 +4,7 @@
  */
 export default function TermsOfService() {
   const updated = "22 February 2026";
-  const appName = "Bulk Price Adjuster";
+  const appName = "Bulk Price Editor";
   const contactEmail = "support@bulkpriceadjuster.app";
 
   return (
@@ -94,3 +94,4 @@ export default function TermsOfService() {
     </html>
   );
 }
+

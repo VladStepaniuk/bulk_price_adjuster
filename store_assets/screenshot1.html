@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400,initial-scale=1">
+<title>Screenshot 1 - Bulk Price Editor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F6F6F7; }
+
+  .topbar {
+    background: #1A1F2E;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+  .topbar-logo { color: #00D37F; font-weight: 700; font-size: 16px; letter-spacing: -0.3px; }
+  .topbar-app { color: #fff; font-size: 14px; opacity: 0.7; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+
+  .page-title { font-size: 26px; font-weight: 700; color: #1A1F2E; margin-bottom: 6px; }
+  .page-sub { font-size: 15px; color: #6B7280; margin-bottom: 28px; }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; display: block; }
+  .select-box {
+    width: 100%;
+    height: 40px;
+    border: 1.5px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #1A1F2E;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236B7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 12px center;
+    appearance: none;
+  }
+  .select-box.active { border-color: #00D37F; box-shadow: 0 0 0 3px rgba(0,211,127,0.12); }
+
+  .dropdown-open {
+    border: 1.5px solid #00D37F;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    margin-top: 4px;
+  }
+  .dropdown-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dropdown-item:hover, .dropdown-item.selected { background: #F0FDF8; color: #00A363; }
+  .dropdown-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #00D37F; }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    background: #F0FDF8; color: #00A363;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid #BBF7D0;
+  }
+
+  .stats-row { display: flex; gap: 20px; margin-top: 16px; }
+  .stat-box { flex: 1; background: #F9FAFB; border-radius: 8px; padding: 14px 16px; border: 1px solid #E5E7EB; }
+  .stat-num { font-size: 24px; font-weight: 700; color: #1A1F2E; }
+  .stat-label { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+  .btn-primary {
+    background: #00D37F; color: #fff; border: none;
+    padding: 10px 24px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-secondary {
+    background: #fff; color: #374151; border: 1.5px solid #D1D5DB;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  .nav { display: flex; gap: 4px; margin-bottom: 24px; }
+  .nav-item { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #6B7280; cursor: pointer; }
+  .nav-item.active { background: #fff; color: #1A1F2E; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-logo">BPE</span>
+  <span class="topbar-app">Bulk Price Editor</span>
+</div>
+<div class="page">
+  <div class="page-title">Bulk Price Editor</div>
+  <div class="page-sub">Update prices across your store — filter, preview, and apply in seconds.</div>
+
+  <div class="nav">
+    <div class="nav-item active">Price Adjustment</div>
+    <div class="nav-item">History</div>
+    <div class="nav-item">Scheduled</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 1 — Select Products</div>
+    <div class="filter-grid">
+      <div class="field">
+        <label>Filter by</label>
+        <select class="select-box active"><option>Collection</option></select>
+      </div>
+      <div class="field">
+        <label>Collection</label>
+        <div class="dropdown-open">
+          <div class="dropdown-item"><span class="dot"></span> Summer Sale</div>
+          <div class="dropdown-item selected"><span class="dot"></span> Winter Collection</div>
+          <div class="dropdown-item"><span class="dot"></span> New Arrivals</div>
+          <div class="dropdown-item"><span class="dot"></span> Best Sellers</div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num">124</div><div class="stat-label">Products matched</div></div>
+      <div class="stat-box"><div class="stat-num">387</div><div class="stat-label">Variants affected</div></div>
+      <div class="stat-box"><div class="stat-num"><span class="badge">Winter Collection</span></div><div class="stat-label" style="margin-top:8px">Active filter</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 2 — Set Adjustment</div>
+    <div class="filter-grid">
+      <div class="field">
+        <label>Adjustment type</label>
+        <select class="select-box"><option>Decrease by percentage</option></select>
+      </div>
+      <div class="field">
+        <label>Value</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:40px;border:1.5px solid #00D37F;border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:18px;font-weight:700;color:#1A1F2E;box-shadow:0 0 0 3px rgba(0,211,127,0.12);">20<span style="font-size:14px;color:#6B7280;margin-left:2px">%</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Price rounding</label>
+        <select class="select-box"><option>.99 endings (e.g. $19.99)</option></select>
+      </div>
+      <div class="field">
+        <label>Apply to</label>
+        <select class="select-box"><option>Price and Compare-at Price</option></select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary">Preview Changes →</button>
+      <button class="btn-primary">⚡ Apply to 387 variants</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

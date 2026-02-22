@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Screenshot 3 - Success & Results</title>
+<style>
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#F6F6F7; }
+  .topbar { background:#1A1F2E;height:56px;display:flex;align-items:center;padding:0 24px;gap:16px; }
+  .topbar-logo { color:#00D37F;font-weight:700;font-size:16px; }
+  .topbar-app { color:#fff;font-size:14px;opacity:0.7; }
+  .page { max-width:1000px;margin:0 auto;padding:32px 24px; }
+  .card { background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:32px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  .success-hero { text-align:center;padding:20px 0 32px; }
+  .success-icon { width:72px;height:72px;background:#00D37F;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px; }
+  .success-title { font-size:28px;font-weight:700;color:#1A1F2E;margin-bottom:8px; }
+  .success-sub { font-size:16px;color:#6B7280; }
+  .stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:28px 0; }
+  .stat { background:#F9FAFB;border-radius:10px;padding:20px;text-align:center;border:1px solid #E5E7EB; }
+  .stat-num { font-size:32px;font-weight:700;color:#00A363; }
+  .stat-label { font-size:13px;color:#6B7280;margin-top:4px; }
+  .stat.highlight { background:#F0FDF8;border-color:#BBF7D0; }
+  .divider { border:none;border-top:1px solid #E5E7EB;margin:24px 0; }
+  .revert-bar { display:flex;align-items:center;justify-content:space-between;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:16px 20px; }
+  .revert-text { font-size:14px;color:#92400E; }
+  .revert-text strong { color:#78350F; }
+  .btn-revert { background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+  .btn-primary { background:#00D37F;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600; }
+  .btn-row { display:flex;gap:10px;margin-top:20px;justify-content:center; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="topbar-logo">BPE</span>
+  <span class="topbar-app">Bulk Price Editor</span>
+</div>
+<div class="page">
+  <div class="card">
+    <div class="success-hero">
+      <div class="success-icon">✓</div>
+      <div class="success-title">387 prices updated successfully!</div>
+      <div class="success-sub">All changes applied to Winter Collection · Completed in 4.2 seconds</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat highlight">
+        <div class="stat-num">387</div>
+        <div class="stat-label">Variants updated</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">124</div>
+        <div class="stat-label">Products affected</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">−20%</div>
+        <div class="stat-label">Price reduction</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="revert-bar">
+      <div class="revert-text">
+        <strong>Made a mistake?</strong> You can revert all prices back to their original values instantly.
+      </div>
+      <button class="btn-revert">↩ Revert Changes</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary">Make Another Adjustment</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

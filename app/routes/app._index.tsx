@@ -1,5 +1,5 @@
 /**
- * Main App Page - Bulk Price Adjuster
+ * Main App Page - Bulk Price Editor
  * Strict MVP: No scheduling, history, or advanced features
  */
 
@@ -281,7 +281,7 @@ export default function Index() {
 
   return (
     <Page>
-      <TitleBar title="Bulk Price Adjuster" />
+      <TitleBar title="Bulk Price Editor" />
       <Layout>
         <Layout.Section>
           <BlockStack gap="400">
@@ -382,3 +382,4 @@ export default function Index() {
     </Page>
   );
 }
+
