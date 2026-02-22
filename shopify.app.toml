@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "58071a8ee365c4522fad08ea7bc553dc"
-name = "Bulk Price Adjuster"
-application_url = "https://agents-ballet-taxes-lawrence.trycloudflare.com"
+name = "Bulk Price Editor"
+application_url = "https://bulk-price-adjuster-production.up.railway.app"
 embedded = true
 
 # Privacy policy and Terms of Service URLs are configured in the Shopify Partner Dashboard
@@ -34,9 +34,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://agents-ballet-taxes-lawrence.trycloudflare.com/auth/callback",
-  "https://agents-ballet-taxes-lawrence.trycloudflare.com/auth/shopify/callback",
-  "https://agents-ballet-taxes-lawrence.trycloudflare.com/api/auth"
+  "https://bulk-price-adjuster-production.up.railway.app/auth/callback",
+  "https://bulk-price-adjuster-production.up.railway.app/auth/shopify/callback",
+  "https://bulk-price-adjuster-production.up.railway.app/api/auth"
 ]
 
 [build]
