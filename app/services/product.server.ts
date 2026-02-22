@@ -213,7 +213,6 @@ export async function updateProductVariants(
       if (isThrottled) {
         if (attempt < MAX_RETRIES - 1) {
           const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-          console.log(`[Retry] Throttled on ${productId}, retrying in ${delay}ms (${attempt + 1}/${MAX_RETRIES})`);
           await new Promise((r) => setTimeout(r, delay));
           continue;
         }
@@ -241,7 +240,6 @@ export async function updateProductVariants(
 
       if (isRateLimit && attempt < MAX_RETRIES - 1) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-        console.log(`[Retry] 429 on ${productId}, retrying in ${delay}ms (${attempt + 1}/${MAX_RETRIES})`);
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }

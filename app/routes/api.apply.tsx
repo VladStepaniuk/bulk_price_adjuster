@@ -107,7 +107,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ error: "Execution failed" }, { status: 500 });
     }
   } catch (error) {
-    console.error("Apply error:", error);
     return json(
       { error: error instanceof Error ? error.message : "Apply failed" },
       { status: 500 }

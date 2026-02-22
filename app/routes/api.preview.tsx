@@ -63,7 +63,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     return json({ preview });
   } catch (error) {
-    console.error("Preview error:", error);
     return json(
       { error: error instanceof Error ? error.message : "Preview failed" },
       { status: 500 }

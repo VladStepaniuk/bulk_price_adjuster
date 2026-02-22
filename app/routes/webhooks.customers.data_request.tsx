@@ -8,9 +8,7 @@ import { authenticate } from "../shopify.server";
  * only shop-level campaign records — so there is nothing customer-specific to export.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { topic, shop, payload } = await authenticate.webhook(request);
-
-  console.log(`[GDPR] ${topic} for shop: ${shop}`, JSON.stringify(payload));
+  const { } = await authenticate.webhook(request);
 
   // This app stores no personal customer data. Campaigns, logs, and sessions
   // are shop-level records only. No customer PII is collected or stored.

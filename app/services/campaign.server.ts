@@ -98,7 +98,7 @@ export async function executeCampaign(admin: any, campaignId: number) {
   });
   const processedVariantIds = new Set(existingLogs.map((l) => l.variantId));
   if (processedVariantIds.size > 0) {
-    console.log(`[Campaign ${campaignId}] Resuming — skipping ${processedVariantIds.size} already-processed variant(s).`);
+    // resuming after crash — skipping already-processed variants
   }
 
   await db.adjustmentCampaign.update({
@@ -116,8 +116,6 @@ export async function executeCampaign(admin: any, campaignId: number) {
       rounding: (rounding as any) || "NONE",
     };
 
-    console.log(`Executing campaign ${campaignId}. Config:`, config);
-
     // Fetch products using the stored filter
     const ft = (filterType || "collection") as FilterType;
     let products;
@@ -130,8 +128,6 @@ export async function executeCampaign(admin: any, campaignId: number) {
     } else {
       products = await fetchAllProducts(admin.graphql);
     }
-
-    console.log(`Fetched ${products.length} products`);
 
     // Prepare product batches
     interface ProductBatch {
@@ -264,7 +260,6 @@ export async function executeCampaign(admin: any, campaignId: number) {
             title: `Auto-revert of #${campaign.id}`,
           },
         });
-        console.log(`[Campaign ${campaign.id}] Auto-revert scheduled for ${campaign.revertAt.toISOString()}`);
       }
     }
 
@@ -278,7 +273,6 @@ export async function executeCampaign(admin: any, campaignId: number) {
 
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    console.error(`Error executing campaign ${campaignId}:`, error);
     await db.adjustmentCampaign.update({
       where: { id: campaign.id },
       data: { status: "failed", failureReason: reason },

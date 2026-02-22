@@ -58,7 +58,6 @@ export async function getActiveSubscription(
     
     return { plan: "BASIC", id: activeSub.id };
   } catch (error) {
-    console.error("Error checking subscription:", error);
     return { plan: null, id: null };
   }
 }
@@ -110,7 +109,7 @@ export async function createBillingSubscription(
         variables: {
           name: plan.name,
           returnUrl,
-          test: true, // Set to false for production
+          test: false,
           trialDays: plan.trialDays,
           lineItems: [
             {

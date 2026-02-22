@@ -9,7 +9,7 @@ A Shopify embedded app for bulk price adjustments. Built with Remix, Polaris UI,
 - ✅ Price rounding options (.99, .95)
 - ✅ Preview changes before applying
 - ✅ Rate-limited batch processing
-- ✅ £12/month subscription with 14-day trial
+- ✅ $12/month subscription with 14-day trial
 - ✅ Server-side price calculations
 
 ## NOT Included (Strict MVP)

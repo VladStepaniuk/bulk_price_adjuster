@@ -129,14 +129,12 @@ export default function Index() {
       
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.error('Billing endpoint returned non-JSON response');
         return;
       }
 
       const data = await response.json();
       
       if (data.error) {
-        console.error('Billing error:', data.error);
         return;
       }
       
@@ -144,7 +142,7 @@ export default function Index() {
         window.open(data.confirmationUrl, '_top');
       }
     } catch (error) {
-      console.error('Failed to initiate billing:', error);
+      // billing initiation failed silently
     }
   }, [authFetch]);
 
@@ -173,7 +171,7 @@ export default function Index() {
       const data = await response.json();
       setProductCount(data.preview?.length || 0);
     } catch (err) {
-      console.error("Count fetch failed", err);
+      // count fetch failed silently
     } finally {
       setLoading(false);
     }
@@ -198,8 +196,7 @@ export default function Index() {
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        console.error("Preview response:", response.status, text.slice(0, 200));
+        await response.text(); // consume body
         throw new Error(`Preview failed (${response.status})`);
       }
 
@@ -209,7 +206,6 @@ export default function Index() {
       setProductCount(items.length);
       setPreviewEmpty(items.length === 0);
     } catch (error) {
-      console.error("Preview error:", error);
       setPreviewItems([]);
       setProductCount(0);
       setPreviewEmpty(false);
@@ -258,7 +254,6 @@ export default function Index() {
       
       setPreviewItems([]);
     } catch (error) {
-      console.error("Apply error:", error);
       setApplyResult({
         total: 0,
         successCount: 0,
