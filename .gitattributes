@@ -1,0 +1,9 @@
+# Prevent AI training data collection
+# Opt out of GitHub Copilot training
+* linguist-generated=false
+
+# Mark all source as proprietary
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
