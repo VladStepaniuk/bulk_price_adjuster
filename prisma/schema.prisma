@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model AdjustmentCampaign {
+  id              Int             @id @default(autoincrement())
+  shop            String
+  createdAt       DateTime        @default(now())
+  title           String?
+  collectionId    String?         // null means "All Products"
+  collectionTitle String?
+  type            String          // percentage, fixed_amount, set_fixed_price
+  value           Float
+  strategy        String          // increase, decrease
+  rounding        String          @default("NONE") // NONE, ROUND_99, ROUND_95
+  status          String          @default("completed") // pending, processing, completed, failed, scheduled
+  scheduledAt     DateTime?
+  executedAt      DateTime?       // When it actually ran
+  revertedAt      DateTime?       // Set when this campaign has been reverted
+  revertCampaignId Int?           // ID of the revert campaign that undid this one
+  compareAtPrice  Boolean         @default(false)
+  failureReason   String?
+  revertAt        DateTime?        // Sale window end — auto-revert fires at this time
+  linkedCampaignId Int?            // For auto-revert campaigns: points to the source campaign
+  filterType      String          @default("collection") // all, collection, vendor, productType, tag
+  filterValue     String?         // vendor name, product type, or tag value
+  logs            AdjustmentLog[]
+}
+
+model AdjustmentLog {
+  id           Int                @id @default(autoincrement())
+  campaignId   Int
+  campaign     AdjustmentCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  variantId    String
+  productId    String             @default("")
+  productTitle String
+  variantTitle String
+  oldPrice     Float
+  newPrice     Float
+}

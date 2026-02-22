@@ -1,0 +1,389 @@
+/**
+ * Main App Page - Bulk Price Adjuster
+ * Strict MVP: No scheduling, history, or advanced features
+ */
+
+import { useState, useCallback, useEffect } from "react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData, useSearchParams } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import {
+  Page,
+  Layout,
+  BlockStack,
+  Button,
+  Banner,
+  InlineStack,
+  Text,
+  Box,
+  Card,
+} from "@shopify/polaris";
+import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
+import { authenticate } from "../shopify.server";
+import { fetchCollections, fetchProductVendors, fetchProductTypes } from "../services/product.server";
+import type { FilterType } from "../services/product.server";
+import { hasActiveSubscription, getActiveSubscription } from "../services/billing.server";
+import { ProductSelector } from "../components/ProductSelector";
+import { AdjustmentForm, type AdjustmentConfig } from "../components/AdjustmentForm";
+import { PreviewTable, type PreviewItem } from "../components/PreviewTable";
+import { ApplyProgress, type ApplyResult } from "../components/ApplyProgress";
+import { ConfirmationModal } from "../components/ConfirmationModal";
+
+interface LoaderData {
+  collections: Array<{ id: string; title: string }>;
+  vendors: string[];
+  productTypes: string[];
+  hasSubscription: boolean;
+  currentPlan: "BASIC" | "PREMIUM" | null;
+}
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { admin, session } = await authenticate.admin(request);
+
+  // Fetch collections
+  const [collections, vendors, productTypes] = await Promise.all([
+    fetchCollections(admin.graphql),
+    fetchProductVendors(admin.graphql),
+    fetchProductTypes(admin.graphql),
+  ]);
+
+  // Check billing status
+  const { plan: currentPlan } = await getActiveSubscription(admin);
+  const hasSubscription = currentPlan !== null;
+
+  return json<LoaderData>({
+    collections,
+    vendors,
+    productTypes,
+    hasSubscription,
+    currentPlan,
+  });
+};
+
+export default function Index() {
+  const { collections, vendors, productTypes, hasSubscription, currentPlan } = useLoaderData<typeof loader>();
+  const [searchParams] = useSearchParams();
+  const shopify = useAppBridge();
+
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [filterType, setFilterType] = useState<FilterType | null>(null);
+  const [filterValue, setFilterValue] = useState<string | null>(null);
+  const [previewItems, setPreviewItems] = useState<PreviewItem[]>([]);
+  const [applyResult, setApplyResult] = useState<ApplyResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [currentConfig, setCurrentConfig] = useState<AdjustmentConfig | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [productCount, setProductCount] = useState<number | undefined>(undefined);
+  const [previewEmpty, setPreviewEmpty] = useState(false);
+
+  const isFilterReady = filterType === "all" || (filterType !== null && !!filterValue);
+
+  // Set hydrated state
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Helper to get session token for authenticated fetch calls
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    const token = await shopify.idToken();
+    return fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
+  }, [shopify]);
+
+  // Check for successful subscription redirect or cancellation
+  useEffect(() => {
+    const isFromBilling = searchParams.get("from_billing");
+    const chargeId = searchParams.get("charge_id");
+
+    if (isFromBilling) {
+      if (hasSubscription && chargeId) {
+        shopify.toast.show("Thank you for subscribing! Price Adjuster Pro is now active.", {
+          duration: 5000,
+        });
+      } else if (!hasSubscription && !chargeId) {
+        // Merchant likely canceled or the subscription wasn't completed
+        shopify.toast.show("Subscription setup canceled. You can still preview price changes.", {
+          duration: 3000,
+        });
+      }
+      
+      // Clean up the URL to prevent repeating toasts
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("charge_id");
+      newParams.delete("from_billing");
+      window.history.replaceState({}, "", `${window.location.pathname}?${newParams.toString()}`);
+    }
+  }, [hasSubscription, searchParams, shopify]);
+
+  // Handle subscribe redirect
+  const handleSubscribe = useCallback(async (plan: string = "BASIC") => {
+    try {
+      const response = await authFetch(`/api/billing?plan=${plan}`);
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error('Billing endpoint returned non-JSON response');
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Billing error:', data.error);
+        return;
+      }
+      
+      if (data.confirmationUrl) {
+        window.open(data.confirmationUrl, '_top');
+      }
+    } catch (error) {
+      console.error('Failed to initiate billing:', error);
+    }
+  }, [authFetch]);
+
+  // Handle collection selection
+  const handleSelectFilter = useCallback(async (ft: FilterType, fv: string) => {
+    setFilterType(ft);
+    setFilterValue(fv || null);
+    setPreviewItems([]);
+    setApplyResult(null);
+    setProductCount(undefined);
+    setPreviewEmpty(false);
+
+    const ready = ft === "all" || (ft !== null && !!fv);
+    if (!ready) return;
+
+    setLoading(true);
+    try {
+      const response = await authFetch("/api/preview", {
+        method: "POST",
+        body: JSON.stringify({
+          filterType: ft,
+          filterValue: ft === "all" ? "all" : fv,
+          config: { adjustmentType: "PERCENT_INCREASE", value: 1, rounding: "NONE" },
+        }),
+      });
+      const data = await response.json();
+      setProductCount(data.preview?.length || 0);
+    } catch (err) {
+      console.error("Count fetch failed", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch]);
+
+  // Handle preview
+  const handlePreview = useCallback(async (config: AdjustmentConfig) => {
+    if (!isFilterReady) return;
+
+    setLoading(true);
+    setCurrentConfig(config);
+    setApplyResult(null);
+
+    try {
+      const response = await authFetch("/api/preview", {
+        method: "POST",
+        body: JSON.stringify({
+          filterType,
+          filterValue: filterType === "all" ? "all" : filterValue,
+          config,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("Preview response:", response.status, text.slice(0, 200));
+        throw new Error(`Preview failed (${response.status})`);
+      }
+
+      const data = await response.json();
+      const items = data.preview || [];
+      setPreviewItems(items);
+      setProductCount(items.length);
+      setPreviewEmpty(items.length === 0);
+    } catch (error) {
+      console.error("Preview error:", error);
+      setPreviewItems([]);
+      setProductCount(0);
+      setPreviewEmpty(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterType, filterValue, isFilterReady, authFetch]);
+
+  // Handle apply
+  const handleApplyClick = useCallback(() => {
+    setShowConfirmModal(true);
+  }, []);
+
+  const handleConfirmApply = useCallback(async () => {
+    setShowConfirmModal(false);
+    
+    if (!isFilterReady || !currentConfig || !hasSubscription) {
+      return;
+    }
+
+    setApplying(true);
+
+    try {
+      const response = await authFetch("/api/apply", {
+        method: "POST",
+        body: JSON.stringify({
+          filterType,
+          filterValue: filterType === "all" ? "all" : filterValue,
+          config: currentConfig,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Apply failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.scheduled) {
+        shopify.toast.show(data.message);
+        setApplyResult(null); // Clear progress if any
+      } else {
+        setApplyResult(data.result);
+      }
+      
+      setPreviewItems([]);
+    } catch (error) {
+      console.error("Apply error:", error);
+      setApplyResult({
+        total: 0,
+        successCount: 0,
+        failureCount: 1,
+        failures: [{
+          variantId: "",
+          productTitle: "Network Error",
+          variantTitle: "",
+          error: error instanceof Error ? error.message : "Failed to apply changes. Please check your connection and try again.",
+        }],
+      });
+    } finally {
+      setApplying(false);
+    }
+  }, [filterType, filterValue, isFilterReady, currentConfig, hasSubscription, authFetch, shopify]);
+
+  const canApply = previewItems.length > 0 && previewItems.some(i => i.valid);
+  const validCount = previewItems.filter(i => i.valid).length;
+
+  const estimatedTime = validCount > 0
+    ? `${Math.ceil((validCount / 10) * 0.5)} - ${Math.ceil((validCount / 10) * 0.5) + 1} seconds`
+    : "0 seconds";
+
+  if (!isHydrated) return null;
+
+  return (
+    <Page>
+      <TitleBar title="Bulk Price Adjuster" />
+      <Layout>
+        <Layout.Section>
+          <BlockStack gap="400">
+            {!hasSubscription && (
+              <Banner
+                tone="warning"
+                title="Choose your plan"
+              >
+                <BlockStack gap="200">
+                  <p>Start your 14-day free trial. Preview is always free - subscription required to apply changes and use advanced features.</p>
+                  <InlineStack gap="200">
+                    <Button variant="primary" onClick={() => handleSubscribe("BASIC")}>Standard ($12/mo)</Button>
+                    <Button onClick={() => handleSubscribe("PREMIUM")}>Premium ($25/mo - includes Scheduling)</Button>
+                  </InlineStack>
+                </BlockStack>
+              </Banner>
+            )}
+            
+            {hasSubscription && currentPlan === "BASIC" && (
+              <Banner tone="info" title="Upgrade to Premium" action={{ content: "Upgrade Now", onAction: () => handleSubscribe("PREMIUM") }}>
+                Unlock scheduling and more for just $25/month.
+              </Banner>
+            )}
+
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingMd">How it works</Text>
+                <BlockStack gap="100">
+                  <Text as="p" variant="bodySm" tone="subdued">① <strong>Target Products</strong> — choose which products to adjust: all products, a collection, a vendor, a product type, or a tag.</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">② <strong>Configure</strong> — pick whether to increase or decrease by a percentage or fixed dollar amount, and optionally round prices.</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">③ <strong>Preview</strong> — review the exact new prices before anything is changed in your store.</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">④ <strong>Apply</strong> — confirm to push the changes live. Premium users can schedule changes in advance and set an auto-revert date.</Text>
+                </BlockStack>
+                <Box paddingBlockStart="100">
+                  <Text as="p" variant="bodySm" tone="subdued">All changes are logged and the most recent adjustment can be manually reverted from the <strong>History</strong> page at any time.</Text>
+                </Box>
+              </BlockStack>
+            </Card>
+
+            <ProductSelector
+              collections={collections}
+              vendors={vendors}
+              productTypes={productTypes}
+              filterType={filterType}
+              filterValue={filterValue}
+              onSelectFilter={handleSelectFilter}
+              loading={loading || applying}
+              productCount={productCount}
+            />
+
+            {isFilterReady && (
+              <AdjustmentForm
+                onPreview={handlePreview}
+                disabled={false}
+                loading={loading || applying}
+                currentPlan={currentPlan}
+              />
+            )}
+
+            {previewEmpty && (
+              <Banner tone="warning" title="No products found">
+                No products matched your filter. If you selected a collection, vendor, product type, or tag, make sure it contains published products in your Shopify store.
+              </Banner>
+            )}
+
+            {previewItems.length > 0 && (
+              <>
+                <PreviewTable items={previewItems} />
+                
+                <Button
+                  variant="primary"
+                  onClick={handleApplyClick}
+                  disabled={!canApply || !hasSubscription || applying}
+                  loading={applying}
+                  size="large"
+                >
+                  {!hasSubscription ? "Subscription Required" : "Apply Price Changes"}
+                </Button>
+              </>
+            )}
+
+            <ConfirmationModal
+              open={showConfirmModal}
+              onConfirm={handleConfirmApply}
+              onCancel={() => setShowConfirmModal(false)}
+              variantCount={validCount}
+              estimatedTime={estimatedTime}
+            />
+
+            <ApplyProgress
+              result={applyResult}
+              isApplying={applying}
+              progress={0}
+            />
+          </BlockStack>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
