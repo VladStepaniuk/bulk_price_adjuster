@@ -2,7 +2,7 @@
 
 client_id = "58071a8ee365c4522fad08ea7bc553dc"
 name = "Bulk Price Editor"
-application_url = "https://bulk-price-adjuster-production.up.railway.app"
+application_url = "https://bulk-price-editor-production-d1df.up.railway.app"
 embedded = true
 
 # Privacy policy and Terms of Service URLs are configured in the Shopify Partner Dashboard
@@ -34,9 +34,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://bulk-price-adjuster-production.up.railway.app/auth/callback",
-  "https://bulk-price-adjuster-production.up.railway.app/auth/shopify/callback",
-  "https://bulk-price-adjuster-production.up.railway.app/api/auth"
+  "https://bulk-price-editor-production-d1df.up.railway.app/auth/callback",
+  "https://bulk-price-editor-production-d1df.up.railway.app/auth/shopify/callback",
+  "https://bulk-price-editor-production-d1df.up.railway.app/api/auth"
 ]
 
 [build]
