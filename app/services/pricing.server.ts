@@ -33,8 +33,8 @@ export interface PriceCalculationResult {
 export function validateAdjustmentConfig(
   config: PriceAdjustmentConfig
 ): { valid: boolean; error?: string } {
-  if (config.value < 0) {
-    return { valid: false, error: "Value cannot be negative" };
+  if (config.value <= 0) {
+    return { valid: false, error: "Value must be greater than 0" };
   }
 
   if (
