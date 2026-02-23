@@ -28,7 +28,6 @@ export function ConfirmationModal({
       primaryAction={{
         content: "Apply Changes",
         onAction: onConfirm,
-        destructive: true,
       }}
       secondaryActions={[
         {
@@ -40,13 +39,13 @@ export function ConfirmationModal({
       <Modal.Section>
         <TextContainer>
           <Text as="p" variant="bodyMd">
-            You are about to update <strong>{variantCount} variant{variantCount !== 1 ? 's' : ''}</strong>.
+            Prices will update for <strong>{variantCount} variant{variantCount !== 1 ? "s" : ""}</strong> in your store.
           </Text>
           <Text as="p" variant="bodyMd" tone="subdued">
             Estimated time: {estimatedTime}
           </Text>
-          <Text as="p" variant="bodyMd" fontWeight="semibold">
-            This action cannot be undone. Are you sure?
+          <Text as="p" variant="bodyMd" tone="subdued">
+            You can restore original prices from the <strong>History</strong> page at any time.
           </Text>
         </TextContainer>
       </Modal.Section>

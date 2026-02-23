@@ -17,6 +17,9 @@ import {
   Text,
   Box,
   Card,
+  Badge,
+  Collapsible,
+  Link,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -76,6 +79,7 @@ export default function Index() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [productCount, setProductCount] = useState<number | undefined>(undefined);
   const [previewEmpty, setPreviewEmpty] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const isFilterReady = filterType === "all" || (filterType !== null && !!filterValue);
 
@@ -284,43 +288,61 @@ export default function Index() {
       <TitleBar title="Bulk Price Editor" />
       <Layout>
         <Layout.Section>
-          <BlockStack gap="400">
+          <BlockStack gap="500">
+
+            {/* Slim subscription strip — only shows when no plan active */}
             {!hasSubscription && (
-              <Banner
-                tone="warning"
-                title="Choose your plan"
-              >
-                <BlockStack gap="200">
-                  <p>Start your 14-day free trial. Preview is always free - subscription required to apply changes and use advanced features.</p>
+              <Card>
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <BlockStack gap="050">
+                    <Text as="p" variant="bodyMd" fontWeight="semibold">
+                      14-day free trial — no credit card required to preview
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Subscribe to apply changes to your store.{" "}
+                      <span
+                        style={{ cursor: "pointer", textDecoration: "underline", color: "#2c6ecb" }}
+                        onClick={() => setShowHowItWorks((v) => !v)}
+                      >
+                        {showHowItWorks ? "Hide guide" : "How it works"}
+                      </span>
+                    </Text>
+                  </BlockStack>
                   <InlineStack gap="200">
-                    <Button variant="primary" onClick={() => handleSubscribe("BASIC")}>Standard ($12/mo)</Button>
-                    <Button onClick={() => handleSubscribe("PREMIUM")}>Premium ($25/mo - includes Scheduling)</Button>
+                    <Button variant="primary" size="slim" onClick={() => handleSubscribe("BASIC")}>
+                      Standard — $12/mo
+                    </Button>
+                    <Button size="slim" onClick={() => handleSubscribe("PREMIUM")}>
+                      Premium — $25/mo
+                    </Button>
                   </InlineStack>
-                </BlockStack>
-              </Banner>
+                </InlineStack>
+                <Collapsible open={showHowItWorks} id="how-it-works">
+                  <Box paddingBlockStart="300">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" tone="subdued">① <strong>Target Products</strong> — choose all products, a collection, vendor, product type, or tag.</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">② <strong>Configure</strong> — pick % or fixed increase/decrease, optionally round prices.</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">③ <strong>Preview</strong> — review exact new prices before anything changes in your store.</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">④ <strong>Apply</strong> — push live instantly. All changes logged; revert anytime from History.</Text>
+                    </BlockStack>
+                  </Box>
+                </Collapsible>
+              </Card>
             )}
-            
+
+            {/* Upgrade nudge for Basic users */}
             {hasSubscription && currentPlan === "BASIC" && (
-              <Banner tone="info" title="Upgrade to Premium" action={{ content: "Upgrade Now", onAction: () => handleSubscribe("PREMIUM") }}>
-                Unlock scheduling and more for just $25/month.
+              <Banner
+                tone="info"
+                action={{ content: "Upgrade to Premium", onAction: () => handleSubscribe("PREMIUM") }}
+              >
+                <Text as="p" variant="bodySm">
+                  Unlock scheduled campaigns and auto-revert for just $25/mo.
+                </Text>
               </Banner>
             )}
 
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">How it works</Text>
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued">① <strong>Target Products</strong> — choose which products to adjust: all products, a collection, a vendor, a product type, or a tag.</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">② <strong>Configure</strong> — pick whether to increase or decrease by a percentage or fixed dollar amount, and optionally round prices.</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">③ <strong>Preview</strong> — review the exact new prices before anything is changed in your store.</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">④ <strong>Apply</strong> — confirm to push the changes live. Premium users can schedule changes in advance and set an auto-revert date.</Text>
-                </BlockStack>
-                <Box paddingBlockStart="100">
-                  <Text as="p" variant="bodySm" tone="subdued">All changes are logged and the most recent adjustment can be manually reverted from the <strong>History</strong> page at any time.</Text>
-                </Box>
-              </BlockStack>
-            </Card>
-
+            {/* Step 1 */}
             <ProductSelector
               collections={collections}
               vendors={vendors}
@@ -332,6 +354,7 @@ export default function Index() {
               productCount={productCount}
             />
 
+            {/* Step 2 — only shows after filter selected */}
             {isFilterReady && (
               <AdjustmentForm
                 onPreview={handlePreview}
@@ -341,26 +364,54 @@ export default function Index() {
               />
             )}
 
+            {/* No products found */}
             {previewEmpty && (
               <Banner tone="warning" title="No products found">
-                No products matched your filter. If you selected a collection, vendor, product type, or tag, make sure it contains published products in your Shopify store.
+                No products matched your filter. Make sure the selected collection, vendor, product type, or tag contains published products.
               </Banner>
             )}
 
+            {/* Step 3 — Preview & Apply */}
             {previewItems.length > 0 && (
-              <>
-                <PreviewTable items={previewItems} />
-                
-                <Button
-                  variant="primary"
-                  onClick={handleApplyClick}
-                  disabled={!canApply || !hasSubscription || applying}
-                  loading={applying}
-                  size="large"
-                >
-                  {!hasSubscription ? "Subscription Required" : "Apply Price Changes"}
-                </Button>
-              </>
+              <Card>
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      Step 3 — Preview & Apply
+                    </Text>
+                    <Badge tone="info">
+                      {`${validCount} variant${validCount !== 1 ? "s" : ""} ready`}
+                    </Badge>
+                  </InlineStack>
+
+                  <PreviewTable items={previewItems} />
+
+                  {!hasSubscription ? (
+                    <InlineStack gap="200" blockAlign="center">
+                      <Button
+                        variant="primary"
+                        size="large"
+                        onClick={() => handleSubscribe("BASIC")}
+                      >
+                        Subscribe to Apply — 14-day free trial
+                      </Button>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        $12/mo after trial
+                      </Text>
+                    </InlineStack>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={handleApplyClick}
+                      disabled={!canApply || applying}
+                      loading={applying}
+                      size="large"
+                    >
+                      Apply Price Changes
+                    </Button>
+                  )}
+                </BlockStack>
+              </Card>
             )}
 
             <ConfirmationModal

@@ -4,7 +4,17 @@
  */
 
 import { useState } from "react";
-import { Select, Card, BlockStack, Text, TextField, InlineStack } from "@shopify/polaris";
+import {
+  Select,
+  Card,
+  BlockStack,
+  Text,
+  TextField,
+  InlineStack,
+  Button,
+  Badge,
+  Box,
+} from "@shopify/polaris";
 import type { FilterType } from "../services/product.server";
 
 interface Collection {
@@ -23,6 +33,14 @@ interface ProductSelectorProps {
   productCount?: number;
 }
 
+const FILTER_OPTIONS: { label: string; value: FilterType }[] = [
+  { label: "All Products", value: "all" },
+  { label: "Collection", value: "collection" },
+  { label: "Vendor", value: "vendor" },
+  { label: "Product Type", value: "productType" },
+  { label: "Tag", value: "tag" },
+];
+
 export function ProductSelector({
   collections,
   vendors,
@@ -33,17 +51,6 @@ export function ProductSelector({
   loading = false,
   productCount,
 }: ProductSelectorProps) {
-  const [tagInput, setTagInput] = useState("");
-
-  const filterModeOptions = [
-    { label: "Filter by...", value: "" },
-    { label: "Collection", value: "collection" },
-    { label: "All Products", value: "all" },
-    { label: "Vendor", value: "vendor" },
-    { label: "Product Type", value: "productType" },
-    { label: "Tag", value: "tag" },
-  ];
-
   const collectionOptions = [
     { label: "Select a collection", value: "" },
     ...collections.map((c) => ({ label: c.title, value: c.id })),
@@ -59,31 +66,47 @@ export function ProductSelector({
     ...productTypes.map((t) => ({ label: t, value: t })),
   ];
 
-  const handleModeChange = (val: string) => {
+  const handleModeChange = (val: FilterType) => {
     if (val === "all") {
       onSelectFilter("all", "all");
-    } else if (val === "collection" || val === "vendor" || val === "productType" || val === "tag") {
-      // Just update mode, wait for value selection
-      onSelectFilter(val as FilterType, "");
+    } else {
+      onSelectFilter(val, "");
     }
   };
 
-  const currentMode = filterType || "";
+  const variantLabel =
+    productCount !== undefined && productCount > 0
+      ? `${productCount} variant${productCount !== 1 ? "s" : ""}`
+      : null;
 
   return (
     <Card>
       <BlockStack gap="400">
-        <Text as="h2" variant="headingMd">Target Products</Text>
+        <InlineStack align="space-between" blockAlign="center">
+          <Text as="h2" variant="headingMd">
+            Step 1 — Target Products
+          </Text>
+          {variantLabel && (
+            <Badge tone="success">{variantLabel}</Badge>
+          )}
+        </InlineStack>
 
-        <Select
-          label="Filter by"
-          options={filterModeOptions}
-          value={currentMode}
-          onChange={handleModeChange}
-          disabled={loading}
-          helpText="Narrow down which products will be affected. Choose 'All Products' to adjust your entire catalogue, or pick a specific collection, vendor, product type, or tag."
-        />
+        {/* Filter pills */}
+        <InlineStack gap="200" wrap>
+          {FILTER_OPTIONS.map((opt) => (
+            <Button
+              key={opt.value}
+              variant={filterType === opt.value ? "primary" : "secondary"}
+              size="slim"
+              disabled={loading}
+              onClick={() => handleModeChange(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </InlineStack>
 
+        {/* Secondary selector for non-all filters */}
         {filterType === "collection" && (
           <Select
             label="Collection"
@@ -91,7 +114,7 @@ export function ProductSelector({
             value={filterValue || ""}
             onChange={(val) => val && onSelectFilter("collection", val)}
             disabled={loading}
-            helpText="Only products in this Shopify collection will be adjusted. Collections are managed in your Shopify admin under Products → Collections."
+            helpText="Only products in this collection will be adjusted."
           />
         )}
 
@@ -111,7 +134,7 @@ export function ProductSelector({
               onChange={(val) => onSelectFilter("vendor", val)}
               disabled={loading}
               autoComplete="off"
-              helpText="Enter the exact vendor name as it appears in Shopify"
+              helpText="Enter the exact vendor name as it appears in Shopify."
             />
           )
         )}
@@ -132,7 +155,7 @@ export function ProductSelector({
               onChange={(val) => onSelectFilter("productType", val)}
               disabled={loading}
               autoComplete="off"
-              helpText="Enter the exact product type as it appears in Shopify"
+              helpText="Enter the exact product type as it appears in Shopify."
             />
           )
         )}
@@ -144,14 +167,8 @@ export function ProductSelector({
             onChange={(val) => onSelectFilter("tag", val)}
             disabled={loading}
             autoComplete="off"
-            helpText='Enter a tag exactly as it appears in Shopify (case-sensitive), e.g. "sale" or "summer-2026". Tags can be added to products in your Shopify admin under Products → [product] → Tags.'
+            helpText='Enter a tag exactly as it appears in Shopify, e.g. "sale" or "summer-2026".'
           />
-        )}
-
-        {productCount !== undefined && productCount > 0 && (
-          <Text as="p" tone="success">
-            ✓ {productCount} variant{productCount !== 1 ? "s" : ""} found
-          </Text>
         )}
       </BlockStack>
     </Card>

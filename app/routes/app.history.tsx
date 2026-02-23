@@ -13,6 +13,7 @@ import {
   InlineStack,
   Button,
   Banner,
+  EmptyState,
 } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -107,11 +108,13 @@ export default function HistoryPage() {
               resourceName={{ singular: "campaign", plural: "campaigns" }}
               items={campaigns}
               emptyState={
-                <BlockStack gap="400" align="center">
-                  <div style={{ padding: '40px', textAlign: 'center' }}>
-                    <Text variant="bodyMd" tone="subdued" as="p">No price changes yet</Text>
-                  </div>
-                </BlockStack>
+                <EmptyState
+                  heading="No price changes yet"
+                  image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                  action={{ content: "Make your first adjustment", url: "/app" }}
+                >
+                  <p>Apply a price adjustment and it will appear here. You can revert any adjustment from this page.</p>
+                </EmptyState>
               }
               renderItem={(item) => {
                 const { id, createdAt, executedAt, type, value, strategy, status, _count, collectionId, filterType, filterValue, title, revertedAt, revertCampaignId } = item;
@@ -160,7 +163,7 @@ export default function HistoryPage() {
                               variant="secondary"
                               size="slim"
                               loading={isThisReverting}
-                              onClick={(e) => { e.stopPropagation(); handleRevert(id); }}
+                              onClick={() => { handleRevert(id); }}
                             >
                               Revert
                             </Button>

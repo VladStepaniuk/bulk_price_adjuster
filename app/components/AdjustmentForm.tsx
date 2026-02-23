@@ -6,15 +6,15 @@
 import { useState } from "react";
 import {
   Card,
-  FormLayout,
   Select,
   TextField,
   BlockStack,
+  InlineStack,
   Button,
   Text,
   Checkbox,
-  Box,
   Banner,
+  Box,
 } from "@shopify/polaris";
 
 export type AdjustmentType =
@@ -30,7 +30,7 @@ export interface AdjustmentConfig {
   value: number;
   rounding: RoundingType;
   scheduledAt?: string;
-  revertAt?: string;    // Sale window end — auto-revert fires at this time
+  revertAt?: string;
 }
 
 interface AdjustmentFormProps {
@@ -47,7 +47,7 @@ export function AdjustmentForm({
   currentPlan = "BASIC",
 }: AdjustmentFormProps) {
   const [adjustmentType, setAdjustmentType] =
-    useState<AdjustmentType>("PERCENT_INCREASE");
+    useState<AdjustmentType>("PERCENT_DECREASE");
   const [value, setValue] = useState<string>("10");
   const [rounding, setRounding] = useState<RoundingType>("NONE");
   const [isScheduled, setIsScheduled] = useState(false);
@@ -57,10 +57,10 @@ export function AdjustmentForm({
   const isPremium = currentPlan === "PREMIUM";
 
   const adjustmentTypeOptions = [
-    { label: "Increase by %", value: "PERCENT_INCREASE" },
     { label: "Decrease by %", value: "PERCENT_DECREASE" },
-    { label: "Increase by fixed amount", value: "FIXED_INCREASE" },
+    { label: "Increase by %", value: "PERCENT_INCREASE" },
     { label: "Decrease by fixed amount", value: "FIXED_DECREASE" },
+    { label: "Increase by fixed amount", value: "FIXED_INCREASE" },
   ];
 
   const roundingOptions = [
@@ -69,12 +69,12 @@ export function AdjustmentForm({
     { label: "Round to .95", value: "ROUND_95" },
   ];
 
+  const isPercent = adjustmentType.startsWith("PERCENT");
+  const valueLabel = isPercent ? "%" : "$";
+
   const handlePreview = () => {
     const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue <= 0) {
-      return;
-    }
-
+    if (isNaN(numValue) || numValue <= 0) return;
     onPreview({
       adjustmentType,
       value: numValue,
@@ -92,96 +92,101 @@ export function AdjustmentForm({
   return (
     <Card>
       <BlockStack gap="400">
-        <BlockStack gap="100">
-          <Text as="h2" variant="headingMd">
-            Price Adjustment Settings
-          </Text>
-          <Text as="p" variant="bodySm" tone="subdued">
-            Configure how prices should change. Click <strong>Preview Changes</strong> to see the results before anything is updated in your store.
-          </Text>
-        </BlockStack>
-        <FormLayout>
-          <Select
-            label="Adjustment Type"
-            options={adjustmentTypeOptions}
-            value={adjustmentType}
-            onChange={(val) => setAdjustmentType(val as AdjustmentType)}
-            disabled={disabled || loading}
-            helpText="Percentage adjustments scale with each product's current price. Fixed adjustments add or subtract a flat dollar amount."
-          />
+        <Text as="h2" variant="headingMd">
+          Step 2 — Price Adjustment
+        </Text>
 
-          <TextField
-            label={
-              adjustmentType.startsWith("PERCENT") ? "Percentage" : "Amount ($)"
-            }
-            type="number"
-            value={value}
-            onChange={setValue}
-            disabled={disabled || loading}
-            autoComplete="off"
-            helpText={
-              adjustmentType.startsWith("PERCENT")
-                ? "Enter percentage (e.g., 10 for 10%)"
-                : "Enter dollar amount (e.g., 5.00)"
-            }
-          />
-
-          <Select
-            label="Rounding"
-            options={roundingOptions}
-            value={rounding}
-            onChange={(val) => setRounding(val as RoundingType)}
-            disabled={disabled || loading}
-            helpText="Optional: Round final prices to .99 or .95"
-          />
-
-          <Box paddingBlockStart="200">
-            <BlockStack gap="200">
-              <Checkbox
-                label="Schedule for later (Premium)"
-                checked={isScheduled}
-                onChange={(val) => setIsScheduled(val)}
-                disabled={disabled || loading}
-              />
-              {isScheduled && (
-                <BlockStack gap="200">
-                  {!isPremium && (
-                    <Banner tone="info">
-                      <p>Scheduling is a <strong>Premium</strong> feature. Please upgrade to use this.</p>
-                    </Banner>
-                  )}
-                  <TextField
-                    label="Sale starts at"
-                    type="datetime-local"
-                    value={scheduledDate}
-                    onChange={setScheduledDate}
-                    disabled={disabled || loading || !isPremium}
-                    autoComplete="off"
-                    helpText="The price change will be applied automatically at this date and time."
-                  />
-                  <TextField
-                    label="Revert prices back on (optional)"
-                    type="datetime-local"
-                    value={revertDate}
-                    onChange={setRevertDate}
-                    disabled={disabled || loading || !isPremium}
-                    autoComplete="off"
-                    helpText="Leave blank for a permanent price change. Set a date to auto-restore original prices."
-                  />
-                </BlockStack>
-              )}
-            </BlockStack>
+        {/* Inline row: type + value + rounding */}
+        <InlineStack gap="300" wrap blockAlign="end">
+          <Box minWidth="220px">
+            <Select
+              label="Adjustment"
+              options={adjustmentTypeOptions}
+              value={adjustmentType}
+              onChange={(val) => setAdjustmentType(val as AdjustmentType)}
+              disabled={disabled || loading}
+            />
           </Box>
+          <Box minWidth="100px">
+            <TextField
+              label={`Amount (${valueLabel})`}
+              type="number"
+              value={value}
+              onChange={setValue}
+              disabled={disabled || loading}
+              autoComplete="off"
+              suffix={valueLabel}
+            />
+          </Box>
+          <Box minWidth="160px">
+            <Select
+              label="Rounding"
+              options={roundingOptions}
+              value={rounding}
+              onChange={(val) => setRounding(val as RoundingType)}
+              disabled={disabled || loading}
+            />
+          </Box>
+        </InlineStack>
 
-          <Button
-            variant="primary"
-            onClick={handlePreview}
-            disabled={disabled || loading || !isValueValid()}
-            loading={loading}
-          >
-            Preview Changes
-          </Button>
-        </FormLayout>
+        {/* Scheduling (Premium) */}
+        <Box paddingBlockStart="100">
+          <BlockStack gap="200">
+            <Checkbox
+              label={
+                isPremium
+                  ? "Schedule for later"
+                  : "Schedule for later (Premium only)"
+              }
+              checked={isScheduled}
+              onChange={(val) => setIsScheduled(val)}
+              disabled={disabled || loading}
+            />
+            {isScheduled && (
+              <BlockStack gap="200">
+                {!isPremium && (
+                  <Banner tone="info">
+                    <p>
+                      Scheduling is a <strong>Premium</strong> feature ($25/mo).
+                    </p>
+                  </Banner>
+                )}
+                <InlineStack gap="300" wrap blockAlign="end">
+                  <Box minWidth="220px">
+                    <TextField
+                      label="Sale starts at"
+                      type="datetime-local"
+                      value={scheduledDate}
+                      onChange={setScheduledDate}
+                      disabled={disabled || loading || !isPremium}
+                      autoComplete="off"
+                    />
+                  </Box>
+                  <Box minWidth="220px">
+                    <TextField
+                      label="Auto-revert on (optional)"
+                      type="datetime-local"
+                      value={revertDate}
+                      onChange={setRevertDate}
+                      disabled={disabled || loading || !isPremium}
+                      autoComplete="off"
+                      helpText="Leave blank for a permanent change."
+                    />
+                  </Box>
+                </InlineStack>
+              </BlockStack>
+            )}
+          </BlockStack>
+        </Box>
+
+        <Button
+          variant="primary"
+          onClick={handlePreview}
+          disabled={disabled || loading || !isValueValid()}
+          loading={loading}
+        >
+          Preview Changes
+        </Button>
       </BlockStack>
     </Card>
   );

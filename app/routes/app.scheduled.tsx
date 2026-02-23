@@ -13,6 +13,7 @@ import {
   Banner,
   Box,
   Divider,
+  EmptyState,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
@@ -167,10 +168,14 @@ export default function ScheduledPage() {
 
         <Layout.Section>
           {pairs.length === 0 && standaloneReverts.length === 0 ? (
-            <Card>
-              <div style={{ padding: "40px", textAlign: "center" }}>
-                <Text variant="bodyMd" tone="subdued" as="p">No scheduled price changes</Text>
-              </div>
+            <Card padding="0">
+              <EmptyState
+                heading="No scheduled campaigns"
+                image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                action={{ content: "Schedule a price change", url: "/app" }}
+              >
+                <p>Use the Price Adjustment form and check "Schedule for later" (Premium) to queue changes in advance.</p>
+              </EmptyState>
             </Card>
           ) : (
             <BlockStack gap="400">
