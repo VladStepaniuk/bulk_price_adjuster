@@ -109,7 +109,7 @@ export async function createBillingSubscription(
         variables: {
           name: plan.name,
           returnUrl,
-          test: false,
+          test: process.env.SHOPIFY_BILLING_TEST === "true",
           trialDays: plan.trialDays,
           lineItems: [
             {
