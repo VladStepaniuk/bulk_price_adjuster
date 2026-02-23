@@ -7,8 +7,9 @@
 import { BillingInterval, shopifyApp } from "@shopify/shopify-app-remix/server";
 import { Session } from "@shopify/shopify-api";
 
-const PLAN_BASIC = "Standard Plan";
-const PLAN_PREMIUM = "Premium Plan";
+// These must match the Managed Pricing plan handles set in Partner Dashboard
+const PLAN_BASIC = "standard";
+const PLAN_PREMIUM = "premium";
 
 export const BILLING_PLANS = {
   BASIC: {
@@ -52,7 +53,9 @@ export async function getActiveSubscription(
     
     if (!activeSub) return { plan: null, id: null };
 
-    if (activeSub.name === PLAN_PREMIUM) {
+    // Match against Managed Pricing display names OR legacy plan name strings
+    const name = activeSub.name?.toLowerCase() ?? "";
+    if (name.includes("premium")) {
       return { plan: "PREMIUM", id: activeSub.id };
     }
     

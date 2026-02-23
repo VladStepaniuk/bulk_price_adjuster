@@ -126,7 +126,7 @@ export default function Index() {
     }
   }, [hasSubscription, searchParams, shopify]);
 
-  // Handle subscribe redirect
+  // Handle subscribe redirect — uses Shopify Managed Pricing
   const handleSubscribe = useCallback(async (plan: string = "BASIC") => {
     try {
       const response = await authFetch(`/api/billing?plan=${plan}`);
@@ -137,10 +137,6 @@ export default function Index() {
       }
 
       const data = await response.json();
-      
-      if (data.error) {
-        return;
-      }
       
       if (data.confirmationUrl) {
         window.open(data.confirmationUrl, '_top');

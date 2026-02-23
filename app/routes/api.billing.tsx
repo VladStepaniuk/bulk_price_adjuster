@@ -1,36 +1,48 @@
 /**
  * Billing API endpoint
- * Creates subscription and returns confirmation URL
+ * Uses Shopify Managed Pricing — redirects merchant to Shopify's hosted plan selection page.
+ * Plan handles must match what was set up in Partner Dashboard Managed Pricing:
+ *   standard  → $12/mo
+ *   premium   → $25/mo
  */
 
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import { createBillingSubscription } from "../services/billing.server";
+
+const PLAN_HANDLES: Record<string, string> = {
+  BASIC: "standard",
+  PREMIUM: "premium",
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const shop = session.shop;
+  const planKey = (url.searchParams.get("plan") as "BASIC" | "PREMIUM") || "BASIC";
+  const planHandle = PLAN_HANDLES[planKey] ?? "standard";
 
-  // Build the return URL pointing to the Shopify Admin so the app reloads
-  // embedded (not standalone), avoiding the auth/login redirect loop.
+  const shop = session.shop;
   const shopName = shop.replace(".myshopify.com", "");
   const clientId = process.env.SHOPIFY_API_KEY!;
   const returnUrl = `https://admin.shopify.com/store/${shopName}/apps/${clientId}?from_billing=1`;
 
-  const planType = (url.searchParams.get("plan") as "BASIC" | "PREMIUM") || "BASIC";
+  try {
+    // Shopify Managed Pricing: request a subscription via the billing API
+    // using the plan handle defined in Partner Dashboard.
+    const billingResponse = await billing.request({
+      plan: planHandle,
+      isTest: process.env.SHOPIFY_BILLING_TEST === "true",
+      returnUrl,
+    });
 
-  const result = await createBillingSubscription(admin, session, returnUrl, planType);
+    if (billingResponse?.confirmationUrl) {
+      return json({ confirmationUrl: billingResponse.confirmationUrl, error: null });
+    }
 
-  if (result.error) {
-    return json({ error: result.error, confirmationUrl: null }, { status: 400 });
+    return json({ error: "No confirmation URL returned", confirmationUrl: null }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Billing setup failed";
+    return json({ error: message, confirmationUrl: null }, { status: 400 });
   }
-
-  if (result.confirmationUrl) {
-    return json({ confirmationUrl: result.confirmationUrl, error: null });
-  }
-
-  return json({ error: "Failed to create subscription", confirmationUrl: null }, { status: 500 });
 };
