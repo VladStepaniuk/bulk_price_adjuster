@@ -1,33 +1,13 @@
 /**
  * Billing service - handles subscription management
- * £12/month with 14-day trial
- * Blocks apply action only, not preview
+ * Standard: $12/month · Premium: $25/month · 14-day trial
+ * Uses Shopify Remix SDK billing (Managed Pricing)
  */
 
-import { BillingInterval, shopifyApp } from "@shopify/shopify-app-remix/server";
 import { Session } from "@shopify/shopify-api";
 
-// These must match the Managed Pricing plan handles set in Partner Dashboard
-const PLAN_BASIC = "standard";
-const PLAN_PREMIUM = "premium";
-
-export const BILLING_PLANS = {
-  BASIC: {
-    name: PLAN_BASIC,
-    amount: 12.00,
-    interval: BillingInterval.Every30Days,
-    trialDays: 14,
-  },
-  PREMIUM: {
-    name: PLAN_PREMIUM,
-    amount: 25.00,
-    interval: BillingInterval.Every30Days,
-    trialDays: 14,
-  }
-};
-
 /**
- * Check which subscription the shop has
+ * Check which subscription the shop has via GraphQL
  */
 export async function getActiveSubscription(
   admin: any
@@ -48,19 +28,19 @@ export async function getActiveSubscription(
 
     const data = await response.json();
     const subscriptions = data?.data?.appInstallation?.activeSubscriptions || [];
-    
+
     const activeSub = subscriptions.find((sub: any) => sub.status === "ACTIVE");
-    
+
     if (!activeSub) return { plan: null, id: null };
 
-    // Match against Managed Pricing display names OR legacy plan name strings
-    const name = activeSub.name?.toLowerCase() ?? "";
+    // Match against plan names defined in shopify.server.ts
+    const name = (activeSub.name ?? "").toLowerCase();
     if (name.includes("premium")) {
       return { plan: "PREMIUM", id: activeSub.id };
     }
-    
+    // "Standard" or any other active sub = BASIC
     return { plan: "BASIC", id: activeSub.id };
-  } catch (error) {
+  } catch {
     return { plan: null, id: null };
   }
 }
@@ -77,74 +57,7 @@ export async function hasActiveSubscription(
 }
 
 /**
- * Create billing subscription
- */
-export async function createBillingSubscription(
-  admin: any,
-  session: Session,
-  returnUrl: string,
-  planType: "BASIC" | "PREMIUM" = "BASIC"
-): Promise<{ confirmationUrl?: string; error?: string }> {
-  try {
-    const plan = BILLING_PLANS[planType];
-    const response = await admin.graphql(
-      `#graphql
-      mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $test: Boolean, $trialDays: Int, $lineItems: [AppSubscriptionLineItemInput!]!) {
-        appSubscriptionCreate(
-          name: $name
-          returnUrl: $returnUrl
-          test: $test
-          trialDays: $trialDays
-          lineItems: $lineItems
-        ) {
-          appSubscription {
-            id
-            status
-          }
-          confirmationUrl
-          userErrors {
-            field
-            message
-          }
-        }
-      }`,
-      {
-        variables: {
-          name: plan.name,
-          returnUrl,
-          test: process.env.SHOPIFY_BILLING_TEST === "true",
-          trialDays: plan.trialDays,
-          lineItems: [
-            {
-              plan: {
-                appRecurringPricingDetails: {
-                  price: { amount: plan.amount, currencyCode: "USD" },
-                  interval: plan.interval,
-                },
-              },
-            },
-          ],
-        },
-      }
-    );
-
-    const data = await response.json();
-    const result = data?.data?.appSubscriptionCreate;
-
-    if (result?.userErrors && result.userErrors.length > 0) {
-      return { error: result.userErrors[0].message };
-    }
-
-    return { confirmationUrl: result?.confirmationUrl };
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Billing setup failed",
-    };
-  }
-}
-
-/**
- * Cancel subscription (for uninstall)
+ * Cancel subscription (for uninstall webhook)
  */
 export async function cancelSubscription(
   admin: any,
@@ -155,25 +68,17 @@ export async function cancelSubscription(
       `#graphql
       mutation AppSubscriptionCancel($id: ID!) {
         appSubscriptionCancel(id: $id) {
-          appSubscription {
-            id
-            status
-          }
-          userErrors {
-            field
-            message
-          }
+          appSubscription { id status }
+          userErrors { field message }
         }
       }`,
-      {
-        variables: { id: subscriptionId },
-      }
+      { variables: { id: subscriptionId } }
     );
 
     const data = await response.json();
     const result = data?.data?.appSubscriptionCancel;
 
-    if (result?.userErrors && result.userErrors.length > 0) {
+    if (result?.userErrors?.length > 0) {
       return { success: false, error: result.userErrors[0].message };
     }
 

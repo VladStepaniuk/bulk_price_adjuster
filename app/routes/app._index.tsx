@@ -126,25 +126,12 @@ export default function Index() {
     }
   }, [hasSubscription, searchParams, shopify]);
 
-  // Handle subscribe redirect — uses Shopify Managed Pricing
-  const handleSubscribe = useCallback(async (plan: string = "BASIC") => {
-    try {
-      const response = await authFetch(`/api/billing?plan=${plan}`);
-      
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        return;
-      }
-
-      const data = await response.json();
-      
-      if (data.confirmationUrl) {
-        window.open(data.confirmationUrl, '_top');
-      }
-    } catch (error) {
-      // billing initiation failed silently
-    }
-  }, [authFetch]);
+  // Handle subscribe — navigates top frame to billing route which redirects to Shopify billing page
+  const handleSubscribe = useCallback((plan: string = "BASIC") => {
+    // billing.request() server-side throws a redirect — navigate the top frame directly
+    const billingUrl = `/api/billing?plan=${plan}`;
+    window.open(billingUrl, '_top');
+  }, []);
 
   // Handle collection selection
   const handleSelectFilter = useCallback(async (ft: FilterType, fv: string) => {

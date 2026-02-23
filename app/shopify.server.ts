@@ -2,10 +2,15 @@ import "@shopify/shopify-app-remix/adapters/node";
 import {
   ApiVersion,
   AppDistribution,
+  BillingInterval,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
+
+// Plan name constants — used as keys in billing config AND in billing.request()
+export const PLAN_STANDARD = "Standard";
+export const PLAN_PREMIUM = "Premium";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -16,6 +21,28 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
+  billing: {
+    [PLAN_STANDARD]: {
+      lineItems: [
+        {
+          amount: 12.00,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+      trialDays: 14,
+    },
+    [PLAN_PREMIUM]: {
+      lineItems: [
+        {
+          amount: 25.00,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+      trialDays: 14,
+    },
+  },
   future: {
     unstable_newEmbeddedAuthStrategy: true,
     expiringOfflineAccessTokens: true,
