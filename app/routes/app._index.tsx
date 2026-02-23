@@ -126,12 +126,19 @@ export default function Index() {
     }
   }, [hasSubscription, searchParams, shopify]);
 
-  // Handle subscribe — navigates top frame to billing route which redirects to Shopify billing page
-  const handleSubscribe = useCallback((plan: string = "BASIC") => {
-    // billing.request() server-side throws a redirect — navigate the top frame directly
-    const billingUrl = `/api/billing?plan=${plan}`;
-    window.open(billingUrl, '_top');
-  }, []);
+  // Handle subscribe — fetches billing endpoint with session token, then redirects top frame
+  const handleSubscribe = useCallback(async (plan: string = "BASIC") => {
+    try {
+      const response = await authFetch(`/api/billing?plan=${plan}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.confirmationUrl) {
+        window.open(data.confirmationUrl, '_top');
+      }
+    } catch {
+      // silent
+    }
+  }, [authFetch]);
 
   // Handle collection selection
   const handleSelectFilter = useCallback(async (ft: FilterType, fv: string) => {
