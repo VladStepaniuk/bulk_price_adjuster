@@ -109,7 +109,7 @@ export async function createBillingSubscription(
         variables: {
           name: plan.name,
           returnUrl,
-          test: false,
+          test: true,
           trialDays: plan.trialDays,
           lineItems: [
             {
