@@ -1,26 +1,92 @@
 /**
- * Billing route — Managed Pricing flow.
- *
- * With Managed Pricing enabled, Shopify hosts the plan selection page.
- * We just redirect the merchant there. No Billing API call needed.
- *
- * Plan selection URL pattern:
- *   https://admin.shopify.com/store/:store_handle/charges/:app_handle/pricing_plans
- *
- * After the merchant selects a plan, Shopify redirects back to the app.
+ * Billing route — manual AppSubscriptionCreate via GraphQL.
+ * Works on dev stores with test: true charges.
+ * Returns { confirmationUrl } as JSON; client opens it in _top.
  */
 
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
-const APP_HANDLE = "bulk-price-editor-2";
+const PLANS = {
+  BASIC: {
+    name: "Standard Plan",
+    amount: 12.0,
+    currencyCode: "USD",
+  },
+  PREMIUM: {
+    name: "Premium Plan",
+    amount: 25.0,
+    currencyCode: "USD",
+  },
+} as const;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+
+  const url = new URL(request.url);
+  const planKey = (url.searchParams.get("plan") as keyof typeof PLANS) ?? "BASIC";
+  const plan = PLANS[planKey] ?? PLANS.BASIC;
+  const isTest = process.env.SHOPIFY_BILLING_TEST === "true";
 
   const shopName = session.shop.replace(".myshopify.com", "");
-  const planSelectionUrl = `https://admin.shopify.com/store/${shopName}/charges/${APP_HANDLE}/pricing_plans`;
+  const returnUrl = `https://admin.shopify.com/store/${shopName}/apps/bulk-price-editor-2`;
 
-  return redirect(planSelectionUrl);
+  try {
+    const response = await admin.graphql(
+      `#graphql
+      mutation CreateSubscription(
+        $name: String!
+        $returnUrl: URL!
+        $test: Boolean
+        $trialDays: Int
+        $lineItems: [AppSubscriptionLineItemInput!]!
+      ) {
+        appSubscriptionCreate(
+          name: $name
+          returnUrl: $returnUrl
+          test: $test
+          trialDays: $trialDays
+          lineItems: $lineItems
+        ) {
+          confirmationUrl
+          userErrors { field message }
+        }
+      }`,
+      {
+        variables: {
+          name: plan.name,
+          returnUrl,
+          test: isTest,
+          trialDays: 14,
+          lineItems: [
+            {
+              plan: {
+                appRecurringPricingDetails: {
+                  price: { amount: plan.amount, currencyCode: plan.currencyCode },
+                  interval: "EVERY_30_DAYS",
+                },
+              },
+            },
+          ],
+        },
+      }
+    );
+
+    const data = await response.json();
+    const result = data?.data?.appSubscriptionCreate;
+
+    if (result?.userErrors?.length > 0) {
+      return json({ error: result.userErrors[0].message }, { status: 400 });
+    }
+
+    if (result?.confirmationUrl) {
+      return json({ confirmationUrl: result.confirmationUrl });
+    }
+
+    return json({ error: "No confirmation URL returned" }, { status: 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Billing failed";
+    return json({ error: message }, { status: 400 });
+  }
 };

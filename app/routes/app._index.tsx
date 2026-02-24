@@ -126,13 +126,19 @@ export default function Index() {
     }
   }, [hasSubscription, searchParams, shopify]);
 
-  // Handle subscribe — Managed Pricing: redirect to Shopify-hosted plan selection page
-  const handleSubscribe = useCallback(() => {
-    const shop = shopify.config.shop; // e.g. "my-store.myshopify.com"
-    const shopName = shop.replace(".myshopify.com", "");
-    const planSelectionUrl = `https://admin.shopify.com/store/${shopName}/charges/bulk-price-editor-2/pricing_plans`;
-    window.open(planSelectionUrl, '_top');
-  }, [shopify]);
+  // Handle subscribe — calls billing API, redirects top frame to Shopify confirmation page
+  const handleSubscribe = useCallback(async (plan: string = "BASIC") => {
+    try {
+      const response = await authFetch(`/api/billing?plan=${plan}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.confirmationUrl) {
+        window.open(data.confirmationUrl, '_top');
+      }
+    } catch {
+      // silent
+    }
+  }, [authFetch]);
 
   // Handle collection selection
   const handleSelectFilter = useCallback(async (ft: FilterType, fv: string) => {
