@@ -29,8 +29,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const plan = PLANS[planKey] ?? PLANS.BASIC;
   const isTest = process.env.SHOPIFY_BILLING_TEST === "true";
 
-  const shopName = session.shop.replace(".myshopify.com", "");
-  const returnUrl = `https://admin.shopify.com/store/${shopName}/apps/bulk-price-editor-2`;
+  const appUrl = process.env.SHOPIFY_APP_URL!;
+  const returnUrl = `${appUrl}?shop=${session.shop}&from_billing=1`;
 
   try {
     const response = await admin.graphql(
