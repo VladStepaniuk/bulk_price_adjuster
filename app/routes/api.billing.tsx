@@ -29,8 +29,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const plan = PLANS[planKey] ?? PLANS.BASIC;
   const isTest = process.env.SHOPIFY_BILLING_TEST === "true";
 
-  const appUrl = process.env.SHOPIFY_APP_URL!;
-  const returnUrl = `${appUrl}?shop=${session.shop}&from_billing=1`;
+  // returnUrl must go back into the Shopify admin embedded context
+  const returnUrl = `https://${session.shop}/admin/apps/${process.env.SHOPIFY_API_KEY}`;
 
   try {
     const response = await admin.graphql(
