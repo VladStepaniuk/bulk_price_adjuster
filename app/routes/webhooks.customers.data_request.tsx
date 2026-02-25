@@ -1,22 +1,29 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
+import crypto from "crypto";
 
 /**
- * GDPR: Customer Data Request
- * Shopify sends this when a customer requests their data.
- * We must respond within 30 days. We store no personal customer data —
- * only shop-level campaign records — so there is nothing customer-specific to export.
+ * Manually verify Shopify webhook HMAC before processing.
+ * Returns 401 if invalid, 200 if valid (we store no customer PII).
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  try {
-    await authenticate.webhook(request);
-  } catch (err) {
-    if (err instanceof Response) return err;
-    throw err;
+  const rawBody = await request.text();
+  const hmacHeader = request.headers.get("x-shopify-hmac-sha256") ?? "";
+  const secret = process.env.SHOPIFY_API_SECRET ?? "";
+
+  const digest = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("base64");
+
+  const valid = crypto.timingSafeEqual(
+    Buffer.from(digest),
+    Buffer.from(hmacHeader.padEnd(digest.length))
+  );
+
+  if (!valid) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
-  // This app stores no personal customer data. Campaigns, logs, and sessions
-  // are shop-level records only. No customer PII is collected or stored.
-
+  // This app stores no personal customer data. Nothing customer-specific to export.
   return new Response(null, { status: 200 });
 };

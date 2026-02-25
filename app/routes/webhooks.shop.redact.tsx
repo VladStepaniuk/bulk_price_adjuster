@@ -1,35 +1,42 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
+import crypto from "crypto";
 import db from "../db.server";
 
 /**
- * GDPR: Shop Data Redact
- * Shopify sends this 48 hours after a shop uninstalls the app.
- * We must delete all data associated with the shop.
+ * Manually verify Shopify webhook HMAC before processing.
+ * Returns 401 if invalid — required by Shopify App Store automated checks.
+ * Deletes all shop data 48h after uninstall.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  let shop: string;
-  try {
-    const result = await authenticate.webhook(request);
-    shop = result.shop;
-  } catch (err) {
-    if (err instanceof Response) return err;
-    throw err;
+  const rawBody = await request.text();
+  const hmacHeader = request.headers.get("x-shopify-hmac-sha256") ?? "";
+  const secret = process.env.SHOPIFY_API_SECRET ?? "";
+
+  const digest = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("base64");
+
+  const valid = crypto.timingSafeEqual(
+    Buffer.from(digest),
+    Buffer.from(hmacHeader.padEnd(digest.length))
+  );
+
+  if (!valid) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
-  try {
-    // Delete all shop data in dependency order
-    await db.adjustmentLog.deleteMany({
-      where: {
-        campaign: { shop },
-      },
-    });
+  const payload = JSON.parse(rawBody) as { domain?: string };
+  const shop = payload.domain;
 
-    await db.adjustmentCampaign.deleteMany({ where: { shop } });
-
-    await db.session.deleteMany({ where: { shop } });
-  } catch {
-    // Still return 200 — Shopify will retry on 5xx
+  if (shop) {
+    try {
+      await db.adjustmentLog.deleteMany({ where: { campaign: { shop } } });
+      await db.adjustmentCampaign.deleteMany({ where: { shop } });
+      await db.session.deleteMany({ where: { shop } });
+    } catch {
+      // Still return 200 — Shopify will retry on 5xx
+    }
   }
 
   return new Response(null, { status: 200 });
