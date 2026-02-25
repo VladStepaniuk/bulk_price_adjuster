@@ -8,7 +8,14 @@ import db from "../db.server";
  * We must delete all data associated with the shop.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop } = await authenticate.webhook(request);
+  let shop: string;
+  try {
+    const result = await authenticate.webhook(request);
+    shop = result.shop;
+  } catch (err) {
+    if (err instanceof Response) return err;
+    throw err;
+  }
 
   try {
     // Delete all shop data in dependency order

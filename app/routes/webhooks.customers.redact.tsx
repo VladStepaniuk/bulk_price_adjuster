@@ -7,7 +7,12 @@ import { authenticate } from "../shopify.server";
  * We store no personal customer data, so there is nothing to delete.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { } = await authenticate.webhook(request);
+  try {
+    await authenticate.webhook(request);
+  } catch (err) {
+    if (err instanceof Response) return err;
+    throw err;
+  }
 
   // This app stores no personal customer data. Nothing to redact.
 

@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "58071a8ee365c4522fad08ea7bc553dc"
+client_id = "e6ee2ca4eeb295410ad0bebdf5798ddc"
 name = "Bulk Price Editor"
 application_url = "https://bulk-price-editor-production-d1df.up.railway.app"
 embedded = true
@@ -21,12 +21,17 @@ api_version = "2026-04"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
-  # NOTE: GDPR compliance webhooks (customers/data_request, customers/redact, shop/redact)
-  # are NOT registered here — they must be set in the Shopify Partner Dashboard under
-  # App setup > GDPR webhooks. Point each to:
-  #   /webhooks/customers/data_request
-  #   /webhooks/customers/redact
-  #   /webhooks/shop/redact
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request"]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/redact"]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["shop/redact"]
+  uri = "/webhooks/shop/redact"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
