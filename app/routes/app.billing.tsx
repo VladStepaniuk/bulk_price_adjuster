@@ -64,7 +64,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!planDef) return json({ error: "Invalid plan" }, { status: 400 });
 
     const isTest = process.env.SHOPIFY_BILLING_TEST === "true";
-    const returnUrl = `https://${session.shop}/admin/apps/${process.env.SHOPIFY_API_KEY}/billing?from_billing=1`;
+    const returnUrl = `https://${session.shop}/admin/apps/${process.env.SHOPIFY_API_KEY}`;
 
     const response = await admin.graphql(
       `#graphql
