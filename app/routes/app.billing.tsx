@@ -59,10 +59,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === "upgrade" || intent === "downgrade") {
-    // Only give a trial to first-time subscribers — not on plan switches
-    const { plan: existingPlan } = await getActiveSubscription(admin);
-    const trialDays = existingPlan === null ? 14 : 0;
-
     const planKey = formData.get("plan") as string;
     const planDef = PLANS.find((p) => p.key === planKey);
     if (!planDef) return json({ error: "Invalid plan" }, { status: 400 });
@@ -95,7 +91,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: planDef.name,
           returnUrl,
           test: isTest,
-          trialDays,
+          trialDays: 14,
           lineItems: [
             {
               plan: {
