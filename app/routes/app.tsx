@@ -34,6 +34,7 @@ export default function App() {
             </Link>
             <Link to="/app/scheduled">Scheduled</Link>
             <Link to="/app/history">History</Link>
+            <Link to="/app/billing">Plans & Billing</Link>
           </NavMenu>
           <Outlet />
         </>
